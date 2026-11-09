@@ -19,7 +19,7 @@ pip install -e .
 ## Building:
 
 ```
-blarg build .
+blarg build --source .
 ```
 
 
