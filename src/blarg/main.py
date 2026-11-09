@@ -24,7 +24,34 @@ template_env = Environment(
 )
 
 
-def build_site(source: Path, target: Path, template: Path = "default.html") -> None:
+def build_site(source: Path, target: Path, template: Path = "default.html", *, optimize_images: bool = False) -> None:
+    if optimize_images:
+        from .images import (
+            check_image_destinations,
+            copy_staged_images,
+            image_plan,
+            stage_images,
+            validate_roots,
+        )
+
+        source, target = Path(source), Path(target)
+        validate_roots(source, target)
+        plan = image_plan(source, target)
+        pages = [page for page in source.rglob("*.md")
+                 if not page.resolve().is_relative_to(target.resolve())]
+        destinations = [Path("index.html"), Path("public/pygments.css")]
+        destinations += [Path(page.stem) / "index.html" for page in pages
+                         if "node_modules" not in page.parts]
+        check_image_destinations(plan, destinations)
+        with stage_images(plan) as (staged, optimized, saved):
+            _build_site(source, target, template)
+            copy_staged_images(staged, target, plan)
+        print(f"Images: {len(plan)} copied, {optimized} optimized, {saved} bytes saved")
+        return
+    _build_site(source, target, template)
+
+
+def _build_site(source: Path, target: Path, template: Path = "default.html") -> None:
     # Cleanup build directory
     try:
         shutil.rmtree(target)

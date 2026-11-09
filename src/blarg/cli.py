@@ -12,9 +12,11 @@ app = typer.Typer()
 
 
 @app.command()
-def build(source: Path = Path("."), target: Path = Path("site")):
+def build(
+    source: Path = Path("."), target: Path = Path("site"), optimize_images: bool = False
+):
     """Build the site"""
-    build_site(source, target)
+    build_site(source, target, optimize_images=optimize_images)
 
 
 @app.command()
